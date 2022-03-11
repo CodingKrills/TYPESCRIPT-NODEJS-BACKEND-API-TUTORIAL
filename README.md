@@ -215,3 +215,90 @@ We include all the necessary API methods such as:
 - updatePost - A request to update a post with new values.
 - deletePost - A request to delete an existing post.
 - addPost - A request to add a new post to the existing list.
+
+
+### Adding the routes
+
+Create the routes folder, in it have the posts.ts file. The file connects routes to their controllers.
+
+```
+routes/posts.ts
+```
+
+```
+/** source/routes/posts.ts */
+import express from 'express';
+import controller from '../controllers/posts';
+const router = express.Router();
+
+router.get('/posts', controller.getPosts);
+router.get('/posts/:id', controller.getPost);
+router.put('/posts/:id', controller.updatePost);
+router.delete('/posts/:id', controller.deletePost);
+router.post('/posts', controller.addPost);
+
+export = router;
+```
+
+Define all the necessary routes to handle the respective API endpoints, such as GET, POST, PATCH, AND DELETE (as defined in the API controller module).
+
+### Setting up the server
+
+The server.ts file is responsible for setting up the server. This involves express middlewares, the routes, and also starting the server.
+
+```
+server.ts
+```
+
+```
+/** source/server.ts */
+import http from 'http';
+import express, { Express } from 'express';
+import morgan from 'morgan';
+import routes from './routes/posts';
+
+const router: Express = express();
+
+/** Logging */
+router.use(morgan('dev'));
+/** Parse the request */
+router.use(express.urlencoded({ extended: false }));
+/** Takes care of JSON data */
+router.use(express.json());
+
+/** RULES OF OUR API */
+router.use((req, res, next) => {
+    // set the CORS policy
+    res.header('Access-Control-Allow-Origin', '*');
+    // set the CORS headers
+    res.header('Access-Control-Allow-Headers', 'origin, X-Requested-With,Content-Type,Accept, Authorization');
+    // set the CORS method headers
+    if (req.method === 'OPTIONS') {
+        res.header('Access-Control-Allow-Methods', 'GET PATCH DELETE POST');
+        return res.status(200).json({});
+    }
+    next();
+});
+
+/** Routes */
+router.use('/', routes);
+
+/** Error handling */
+router.use((req, res, next) => {
+    const error = new Error('not found');
+    return res.status(404).json({
+        message: error.message
+    });
+});
+
+/** Server */
+const httpServer = http.createServer(router);
+const PORT: any = process.env.PORT ?? 6060;
+httpServer.listen(PORT, () => console.log(`The server is running on port ${PORT}`));
+```
+
+### Step 6: Starting the development server
+
+```
+npm run dev
+```
